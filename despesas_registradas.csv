@@ -1,0 +1,13 @@
+ID,Cliente,Modelo,Data,Tipo,Valor,Pago
+0,andrelina1,pop 1.5,26/06/2025,ICMS,980.0,True
+0,andrelina1,pop 1.5,26/06/2025,Simples,823.5,True
+0,andrelina1,pop 1.5,26/06/2025,Royalties,1281.0000000000002,True
+0,andrelina1,pop 1.5,26/06/2025,Propaganda,457.5,True
+0,andrelina1,pop 1.5,26/06/2025,Corretagem,549.0,True
+0,andrelina1,pop 1.5,26/06/2025,Despesas ADM,915.0,False
+1,JOSE,pousada pop ,26/06/2025,ICMS,935.0,True
+1,JOSE,pousada pop ,26/06/2025,Simples,765.0,True
+1,JOSE,pousada pop ,26/06/2025,Royalties,1190.0,True
+1,JOSE,pousada pop ,26/06/2025,Propaganda,425.0,True
+1,JOSE,pousada pop ,26/06/2025,Corretagem,510.0,True
+1,JOSE,pousada pop ,26/06/2025,Despesas ADM,850.0,True
