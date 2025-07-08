@@ -1,0 +1,36 @@
+# 📦 Sistema de Gestão de Vendas e Entregas - MCPF BAHIA
+
+Sistema completo para controle de:
+
+- 📋 Cadastro de Vendas
+- 💸 Painel de Despesas por Venda
+- 💰 Controle de Recebimentos
+- 📦 Controle de Entregas dos Kits
+- 📊 Relatórios e Dashboards
+- 🏠 Visão Consolidada com Lucro, Saldo e Comissão
+
+---
+
+## ▶️ Como Rodar o Sistema
+
+1. Instale o Streamlit (se ainda não tiver):
+```bash
+pip install streamlit pandas altair
+
+
+📁 Estrutura dos Arquivos
+vendas_registradas.csv: registro das vendas
+
+recebimentos_registrados.csv: controle dos recebimentos
+
+entregas_registradas.csv: controle das entregas dos kits
+
+✍️ Observações Importantes
+As datas no formulário de entrega devem ser inseridas no formato dd/mm/aaaa.
+
+O sistema salva backups automáticos antes de sobrescrever os arquivos .csv.
+
+Todos os valores são exibidos com formatação brasileira de moeda.
+
+🧠 Desenvolvido em Python + Streamlit
+Projeto criado por José de Sena Moreira Santos para gestão das vendas da franquia Minha Casa Pré-Fabricada.

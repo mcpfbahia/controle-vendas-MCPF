@@ -42,9 +42,9 @@ def calcular_despesas(valor_venda, custo):
     simples = valor_venda * 0.045
     royalties = valor_venda * 0.075
     propaganda = valor_venda * 0.015
-    corretor = valor_venda * 0.03
+    valor_corretor = valor_venda * 0.03
     desp_adm = valor_venda * 0.05
-    return icms, simples, royalties, propaganda, corretor, desp_adm
+    return icms, simples, royalties, propaganda, valor_corretor, desp_adm
 
 def calcular_lucros(valor_venda, custo, total_desp):
     lucro_bruto = valor_venda - custo
@@ -86,10 +86,12 @@ aba = st.sidebar.radio(
         "📋 Cadastro de Vendas",
         "💸 Painel de Despesas",
         "💰 Controle de Recebimentos",
+        "📦 Controle de Entregas",    # <- NOVA LINHA
         "📊 Dashboards",
         "🏠 Dashboard Consolidado"
     ]
 )
+
 
 if aba == "📋 Cadastro de Vendas":
     st.title("📋 Cadastro de Vendas - MCPF")
@@ -100,16 +102,18 @@ if aba == "📋 Cadastro de Vendas":
     with st.form("cadastro_venda"):
         col1, col2 = st.columns(2)
         with col1:
-            data = st.date_input("Data da Venda", value=date.today())
-            cliente = st.text_input("Nome do Cliente")
-            modelo = st.text_input("Modelo")
+            data = st.date_input("📅 Data da Venda", value=date.today())
+            cliente = st.text_input("👤 Nome do Cliente", placeholder="Digite o nome completo")
+            modelo = st.text_input("🏠 Modelo do Kit", placeholder="Ex: Chalé Pop 2.0")
+            corretor = st.text_input("👔 Nome do Corretor (opcional)", placeholder="Digite o nome do corretor")
         with col2:
-            valor_venda = st.number_input("Valor da Venda", min_value=0.0, step=100.0)
-            custo = st.number_input("Custo do Kit", min_value=0.0, step=100.0)
-            valor_frete = st.number_input("Valor do Frete", min_value=0.0, step=50.0)
+            valor_venda = st.number_input("💰 Valor da Venda", min_value=0.0, step=100.0)
+            custo = st.number_input("🧾 Custo do Kit", min_value=0.0, step=100.0)
+            valor_frete = st.number_input("🚚 Valor do Frete", min_value=0.0, step=50.0)
 
         st.caption("🛻 O valor do frete é pago diretamente pelo cliente e não entra nos cálculos de lucro.")
-        enviado = st.form_submit_button("Salvar Venda")
+        enviado = st.form_submit_button("✅ Salvar Venda")
+
 
         if enviado:
             if not cliente.strip():
@@ -130,30 +134,32 @@ if aba == "📋 Cadastro de Vendas":
             if os.path.exists(ARQUIVO_VENDAS):
                 shutil.copy(ARQUIVO_VENDAS, ARQUIVO_VENDAS + ".bak")
 
-            icms, simples, royalties, propaganda, corretor, desp_adm = calcular_despesas(valor_venda, custo)
-            total_desp = icms + simples + royalties + propaganda + corretor + desp_adm
+            icms, simples, royalties, propaganda, valor_corretor, desp_adm = calcular_despesas(valor_venda, custo)
+            total_desp = icms + simples + royalties + propaganda + valor_corretor + desp_adm
             lucro_bruto, lucro_liquido, percentual_lucro = calcular_lucros(valor_venda, custo, total_desp)
             id_venda = gerar_proximo_id(vendas_df, data)
 
             nova_venda = {
-                "ID": id_venda,
-                "Data": data.strftime('%d/%m/%Y'),
-                "Cliente": cliente,
-                "Modelo": modelo,
-                "Valor da Venda": valor_venda,
-                "Custo": custo,
-                "Valor Frete": valor_frete,
-                "ICMS (10%)": icms,
-                "Simples (4,5%)": simples,
-                "Royalties (7,5%)": royalties,
-                "Propag. (1,5%)": propaganda,
-                "Corretor (3%)": corretor,
-                "Desp. ADM (5%)": desp_adm,
-                "Lucro Bruto": lucro_bruto,
-                "Total Desp.": total_desp,
-                "Lucro Líquido": lucro_liquido,
-                "% de Lucro": percentual_lucro
-            }
+                    "ID": id_venda,
+                    "Data": data.strftime('%d/%m/%Y'),
+                    "Cliente": cliente,
+                    "Modelo": modelo,
+                    "Corretor Nome": str(corretor).strip().title() if pd.notna(corretor) else "",
+                    "Corretor (3%)": valor_corretor,
+                    "Valor da Venda": valor_venda,
+                    "Custo": custo,
+                    "Valor Frete": valor_frete,
+                    "ICMS (10%)": icms,
+                    "Simples (4,5%)": simples,
+                    "Royalties (7,5%)": royalties,
+                    "Propag. (1,5%)": propaganda,
+                    "Desp. ADM (5%)": desp_adm,
+                    "Lucro Bruto": lucro_bruto,
+                    "Total Desp.": total_desp,
+                    "Lucro Líquido": lucro_liquido,
+                    "% de Lucro": percentual_lucro
+                    
+                }    
 
             # Campos de controle de despesas
             for desp in ["Custo", "Royalties (7,5%)", "Propag. (1,5%)", "ICMS (10%)",
@@ -269,6 +275,9 @@ if aba == "📋 Cadastro de Vendas":
                 shutil.copy(ARQUIVO_VENDAS, ARQUIVO_VENDAS + ".bak")
             if os.path.exists(ARQUIVO_RECEB):
                 shutil.copy(ARQUIVO_RECEB, ARQUIVO_RECEB + ".bak")
+            if "Corretor Nome" not in vendas_df.columns:
+                vendas_df["Corretor Nome"] = ""
+
 
             vendas_df = vendas_df[~vendas_df["ID"].isin(ids_selecionados)].reset_index(drop=True)
 
@@ -574,6 +583,102 @@ elif aba == "💰 Controle de Recebimentos":
         use_container_width=True
     )
 
+elif aba == "📦 Controle de Entregas":
+    st.title("📦 Controle de Entregas de Kits")
+
+    ARQUIVO_ENTREGAS = "entregas_registradas.csv"
+
+    # Carrega ou cria DataFrame
+    if os.path.exists(ARQUIVO_ENTREGAS):
+        entregas_df = pd.read_csv(ARQUIVO_ENTREGAS)
+    else:
+        entregas_df = pd.DataFrame(columns=[
+            "ID Venda", "Cliente", "Modelo", "Data Prevista", "Data Entrega",
+            "Solicitação", "Observação", "Status"
+        ])
+
+    # Mapeia vendas existentes
+    if not vendas_df.empty:
+        vendas_df["Identificador"] = vendas_df.apply(
+            lambda row: f"{row['ID']} | {row['Data']} | {row['Cliente']} | {row['Modelo']}",
+            axis=1
+        )
+
+        opcoes_vendas = vendas_df["Identificador"].tolist()
+
+        with st.form("form_entrega"):
+            st.subheader("📋 Nova Entrega")
+            venda_selecionada = st.selectbox("🧾 Venda", opcoes_vendas)
+            data_prevista = st.date_input("📅 Data Prevista de Entrega", value=date.today())
+            data_real = st.date_input("📦 Data Real de Entrega (opcional)", value=None)
+            solicitacao = st.text_area("📨 Solicitação do Cliente")
+            observacao = st.text_area("📝 Observações Internas")
+            status = st.selectbox("📌 Status", ["⏳ Pendente", "✅ Entregue"])
+            enviado = st.form_submit_button("Salvar Entrega")
+
+            if enviado:
+                id_venda = venda_selecionada.split(" | ")[0]
+                linha = vendas_df[vendas_df["ID"] == id_venda].iloc[0]
+
+                # FORMAÇÃO DEFINITIVA DAS DATAS PARA STRING
+                data_prevista_str = data_prevista.strftime("%d/%m/%Y")
+                data_real_str = data_real.strftime("%d/%m/%Y") if data_real else ""
+
+                nova = {
+                    "ID Venda": id_venda,
+                    "Cliente": linha["Cliente"],
+                    "Modelo": linha["Modelo"],
+                    "Data Prevista": data_prevista_str,
+                    "Data Entrega": data_real_str,
+                    "Solicitação": solicitacao,
+                    "Observação": observacao,
+                    "Status": status
+                }
+
+                entregas_df = pd.concat([entregas_df, pd.DataFrame([nova])], ignore_index=True)
+
+                # GARANTIR QUE CONTINUA COMO STRING FORMATADA
+                entregas_df["Data Prevista"] = entregas_df["Data Prevista"].astype(str)
+                entregas_df["Data Entrega"] = entregas_df["Data Entrega"].astype(str)
+
+                entregas_df.to_csv(ARQUIVO_ENTREGAS, index=False)
+                st.success("✅ Entrega registrada com sucesso!")
+
+
+    else:
+        st.info("Nenhuma venda cadastrada ainda para vincular uma entrega.")
+
+    st.divider()
+    st.subheader("📄 Entregas Registradas")
+
+    if entregas_df.empty:
+        st.info("Nenhuma entrega registrada ainda.")
+    else:
+        df_exibir = entregas_df.copy()
+
+        # Destaque por status
+        def cor_linha(row):
+            return (
+                ["background-color: #d4edda"] * len(row) if row["Status"] == "✅ Entregue"
+                else ["background-color: #fff3cd"] * len(row)
+            )
+
+        styled = df_exibir.style.apply(cor_linha, axis=1)
+
+        st.dataframe(styled, use_container_width=True)
+
+        # Editor simples
+        st.subheader("✏️ Atualizar Dados de Entregas")
+        entregas_editadas = st.data_editor(
+            entregas_df,
+            num_rows="dynamic",
+            use_container_width=True,
+            key="editor_entregas"
+        )
+        if st.button("💾 Salvar Alterações"):
+            entregas_editadas.to_csv(ARQUIVO_ENTREGAS, index=False)
+            st.success("Alterações salvas com sucesso!")
+
 
 # 📊 Relatórios e Métricas (versão personalizada)
 elif aba == "📊 Dashboards":
@@ -742,6 +847,27 @@ elif aba == "🏠 Dashboard Consolidado":
     else:
         st.info("Nenhum dado de lucro mensal para exibir.")
 
+
+    st.subheader("👔 Comissão Total por Corretor")
+
+    # Agrupar comissão
+    comissoes = vendas_df.groupby("Corretor Nome")["Corretor (3%)"].sum().reset_index()
+    comissoes = comissoes.rename(columns={"Corretor (3%)": "Comissão Total"})
+
+    # Filtrar só corretores cadastrados
+    comissoes = comissoes[comissoes["Corretor Nome"] != ""]
+
+    # Formatar moeda
+    comissoes["Comissão Total"] = comissoes["Comissão Total"].apply(formatar_moeda)
+
+    # Exibir
+    if not comissoes.empty:
+        st.table(comissoes)
+    else:
+        st.info("Nenhuma comissão cadastrada ainda.")
+
+
+# Importando bibliotecas necessárias
     # Bloco de alerta de recebimentos pendentes
     st.subheader("🔔 Alertas de Saldos Pendentes")
     resumo = vendas_df[["ID", "Cliente", "Modelo", "Valor da Venda"]].copy()
@@ -755,7 +881,43 @@ elif aba == "🏠 Dashboard Consolidado":
     resumo["Saldo Devedor"] = resumo["Valor da Venda"] - resumo["Valor Recebido"]
     pendentes = resumo[resumo["Saldo Devedor"] > 0]
 
+    def cor_linha(row):
+        if row["Saldo Devedor"] <= 0:
+            return ["background-color: #d4edda"] * len(row)  # Verde
+        elif row["Valor Recebido"] > 0:
+            return ["background-color: #fff3cd"] * len(row)  # Amarelo
+        else:
+            return ["background-color: #f8d7da"] * len(row)  # Vermelho
+
+
     if not pendentes.empty:
-        st.dataframe(pendentes[["ID", "Cliente", "Modelo", "Valor da Venda", "Valor Recebido", "Saldo Devedor"]])
-    else:
-        st.success("🎉 Nenhum saldo pendente!")
+        colunas_exibir = ["ID", "Cliente", "Modelo", "Valor da Venda", "Valor Recebido", "Saldo Devedor"]
+
+    # DataFrame com números (para cor_linha)
+    df_numerico = pendentes[colunas_exibir].copy()
+
+    # DataFrame formatado em moeda (para exibir)
+    df_mostrar = df_numerico.copy()
+    for col in ["Valor da Venda", "Valor Recebido", "Saldo Devedor"]:
+        df_mostrar[col] = df_mostrar[col].apply(formatar_moeda)
+
+    # Aplicar cores usando o DataFrame numérico
+    styled_df = df_mostrar.style.apply(
+        lambda row: (
+            ["background-color: #d4edda"] * len(row)
+            if df_numerico.loc[row.name, "Saldo Devedor"] <= 0
+            else (
+                ["background-color: #fff3cd"] * len(row)
+                if df_numerico.loc[row.name, "Valor Recebido"] > 0
+                else ["background-color: #f8d7da"] * len(row)
+            )
+        ),
+        axis=1
+    )
+
+    st.dataframe(styled_df, use_container_width=True)
+
+else:
+    st.success("🎉 Nenhum saldo pendente!")
+
+

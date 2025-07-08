@@ -86,10 +86,12 @@ aba = st.sidebar.radio(
         "📋 Cadastro de Vendas",
         "💸 Painel de Despesas",
         "💰 Controle de Recebimentos",
+        "📦 Controle de Entregas",    # <- NOVA LINHA
         "📊 Dashboards",
         "🏠 Dashboard Consolidado"
     ]
 )
+
 
 if aba == "📋 Cadastro de Vendas":
     st.title("📋 Cadastro de Vendas - MCPF")
@@ -580,6 +582,102 @@ elif aba == "💰 Controle de Recebimentos":
         resumo_exibe[["ID", "Cliente", "Modelo", "Valor da Venda", "Valor Recebido", "Saldo Devedor", "Status"]],
         use_container_width=True
     )
+
+elif aba == "📦 Controle de Entregas":
+    st.title("📦 Controle de Entregas de Kits")
+
+    ARQUIVO_ENTREGAS = "entregas_registradas.csv"
+
+    # Carrega ou cria DataFrame
+    if os.path.exists(ARQUIVO_ENTREGAS):
+        entregas_df = pd.read_csv(ARQUIVO_ENTREGAS)
+    else:
+        entregas_df = pd.DataFrame(columns=[
+            "ID Venda", "Cliente", "Modelo", "Data Prevista", "Data Entrega",
+            "Solicitação", "Observação", "Status"
+        ])
+
+    # Mapeia vendas existentes
+    if not vendas_df.empty:
+        vendas_df["Identificador"] = vendas_df.apply(
+            lambda row: f"{row['ID']} | {row['Data']} | {row['Cliente']} | {row['Modelo']}",
+            axis=1
+        )
+
+        opcoes_vendas = vendas_df["Identificador"].tolist()
+
+        with st.form("form_entrega"):
+            st.subheader("📋 Nova Entrega")
+            venda_selecionada = st.selectbox("🧾 Venda", opcoes_vendas)
+            data_prevista = st.date_input("📅 Data Prevista de Entrega", value=date.today())
+            data_real = st.date_input("📦 Data Real de Entrega (opcional)", value=None)
+            solicitacao = st.text_area("📨 Solicitação do Cliente")
+            observacao = st.text_area("📝 Observações Internas")
+            status = st.selectbox("📌 Status", ["⏳ Pendente", "✅ Entregue"])
+            enviado = st.form_submit_button("Salvar Entrega")
+
+            if enviado:
+                id_venda = venda_selecionada.split(" | ")[0]
+                linha = vendas_df[vendas_df["ID"] == id_venda].iloc[0]
+
+                # FORMAÇÃO DEFINITIVA DAS DATAS PARA STRING
+                data_prevista_str = data_prevista.strftime("%d/%m/%Y")
+                data_real_str = data_real.strftime("%d/%m/%Y") if data_real else ""
+
+                nova = {
+                    "ID Venda": id_venda,
+                    "Cliente": linha["Cliente"],
+                    "Modelo": linha["Modelo"],
+                    "Data Prevista": data_prevista_str,
+                    "Data Entrega": data_real_str,
+                    "Solicitação": solicitacao,
+                    "Observação": observacao,
+                    "Status": status
+                }
+
+                entregas_df = pd.concat([entregas_df, pd.DataFrame([nova])], ignore_index=True)
+
+                # GARANTIR QUE CONTINUA COMO STRING FORMATADA
+                entregas_df["Data Prevista"] = entregas_df["Data Prevista"].astype(str)
+                entregas_df["Data Entrega"] = entregas_df["Data Entrega"].astype(str)
+
+                entregas_df.to_csv(ARQUIVO_ENTREGAS, index=False)
+                st.success("✅ Entrega registrada com sucesso!")
+
+
+    else:
+        st.info("Nenhuma venda cadastrada ainda para vincular uma entrega.")
+
+    st.divider()
+    st.subheader("📄 Entregas Registradas")
+
+    if entregas_df.empty:
+        st.info("Nenhuma entrega registrada ainda.")
+    else:
+        df_exibir = entregas_df.copy()
+
+        # Destaque por status
+        def cor_linha(row):
+            return (
+                ["background-color: #d4edda"] * len(row) if row["Status"] == "✅ Entregue"
+                else ["background-color: #fff3cd"] * len(row)
+            )
+
+        styled = df_exibir.style.apply(cor_linha, axis=1)
+
+        st.dataframe(styled, use_container_width=True)
+
+        # Editor simples
+        st.subheader("✏️ Atualizar Dados de Entregas")
+        entregas_editadas = st.data_editor(
+            entregas_df,
+            num_rows="dynamic",
+            use_container_width=True,
+            key="editor_entregas"
+        )
+        if st.button("💾 Salvar Alterações"):
+            entregas_editadas.to_csv(ARQUIVO_ENTREGAS, index=False)
+            st.success("Alterações salvas com sucesso!")
 
 
 # 📊 Relatórios e Métricas (versão personalizada)
