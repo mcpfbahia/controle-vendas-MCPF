@@ -1,0 +1,4 @@
+ID Venda,Cliente,Modelo,Data Prevista,Data Entrega,Solicitação,Observação,Status
+20250701-0001,Andrelina,Pousada Pop 1.5,15/07/2025,28/07/2025,Cliente solicitou a entrega do seu kit em 08/07/2025,previsão de envio dia 15/07,⏳ Pendente
+20250701-0002,Eduardo,Pousada Pop 1.5,08/07/2025,26/08/2025,Cliente Eduardo solicitou a entrega em agosto. ,,⏳ Pendente
+20250703-0004,Yolanda Maria,Pop 2.0 60M2,08/07/2025,26/08/2025,Yolanda ainda nao confirmou datas de entrega.,,⏳ Pendente
