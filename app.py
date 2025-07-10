@@ -593,7 +593,7 @@ elif aba == "📦 Controle de Entregas":
         entregas_df = pd.read_csv(ARQUIVO_ENTREGAS)
     else:
         entregas_df = pd.DataFrame(columns=[
-            "ID Venda", "Cliente", "Modelo", "Data Prevista", "Data Entrega",
+            "ID Venda", "Cliente", "Modelo", "Data Prevista", "Data Entrega", "Local de Entrega",
             "Solicitação", "Observação", "Status"
         ])
 
@@ -611,6 +611,7 @@ elif aba == "📦 Controle de Entregas":
             venda_selecionada = st.selectbox("🧾 Venda", opcoes_vendas)
             data_prevista = st.date_input("📅 Data Prevista de Entrega", value=date.today())
             data_real = st.date_input("📦 Data Real de Entrega (opcional)", value=None)
+            local_entrega = st.text_input("📍 Local de Entrega")  # NOVO CAMPO
             solicitacao = st.text_area("📨 Solicitação do Cliente")
             observacao = st.text_area("📝 Observações Internas")
             status = st.selectbox("📌 Status", ["⏳ Pendente", "✅ Entregue"])
@@ -630,6 +631,7 @@ elif aba == "📦 Controle de Entregas":
                     "Modelo": linha["Modelo"],
                     "Data Prevista": data_prevista_str,
                     "Data Entrega": data_real_str,
+                    "Local de Entrega": local_entrega,  # ADICIONADO
                     "Solicitação": solicitacao,
                     "Observação": observacao,
                     "Status": status
